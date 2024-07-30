@@ -266,7 +266,7 @@ int main(void)
       case 0xBC:    //Timer set on time
         activeTimer = getTimer(CAN_RxData[1]);
         timerChannel = CAN_RxData[2];
-        channelPulse = ((CAN_RxData[3] << 8) | (CAN_RxData[4]));
+        channelPulse = ((CAN_RxData[3] << 8) | (CAN_RxData[4])); //Shift by 8 to allow 2 bytes
         float setTimerCalc =((channelPulse + 0.7)/0.23);       //f(x) = 0.23x-0.07 //x=(y+0.7)/0.23
         setChannelPulse(activeTimer, timerChannel, setTimerCalc);
         CAN_response_length = 0;
