@@ -208,7 +208,7 @@ int main(void)
 
     switch (CAN_RxData[0]) {
       case 0xAA:    //set pin direction
-        pinMode(getGPIOPort(CAN_RxData[1]), getGPIOPin(CAN_RxData[1]), CAN_RxData[2], 0);
+        pinMode(getGPIOPort(CAN_RxData[1]), getGPIOPin(CAN_RxData[1]), CAN_RxData[2], CAN_RxData[3]);
         CAN_response_length = 0;  
       break;
 
@@ -818,9 +818,10 @@ void pinMode(GPIO_TypeDef* port, uint16_t pin, uint8_t dir, uint8_t pull) {
     HAL_GPIO_WritePin(port, pin, GPIO_PIN_RESET);
     pull = 0;
   }
+  GPIO_Modes = [LL_GPIO_MODE_INPUT, LL_GPIO_MODE_OUTPUT, LL_GPIO_MODE_ALTERNATE, LL_GPIO_MODE_ANALOG]
 
   GPIO_InitStruct.Pin = pin;
-  GPIO_InitStruct.Mode = dir ? GPIO_MODE_OUTPUT_PP : GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_Modes[dir]
   GPIO_InitStruct.Pull = pull;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(port, &GPIO_InitStruct);
@@ -878,7 +879,7 @@ void sendCANResponse(CAN_HandleTypeDef* hcan, uint8_t command, uint8_t * CAN_res
   uint8_t CAN_TxData[8];            //Array for Data
   uint32_t CAN_TxMailbox;
   uint8_t packet_end = 0;           
-  CAN_TxHeader.IDE = CAN_ID_EXT;    //Extended ID
+  CAN_TxHeadexr.IDE = CAN_ID_EXT;    //Extended ID
   CAN_TxHeader.RTR = CAN_RTR_DATA;  //Remote Transmission Request set to 
   for (uint8_t packet = 0; packet < 30; packet++) {
     memcpy(&CAN_TxData[1], &CAN_response[packet * 7], 7); //Copies the data from CAN_response to CAN_Data[1]
