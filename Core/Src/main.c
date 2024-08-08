@@ -141,10 +141,6 @@ int main(void)
 
   //CAN Filter
   CAN_FilterTypeDef CAN_FilterType;
-  //1. 11-Bit ID
-  //2. 18-Bit ID
-  //3. RTR OR SRR ([Substitute] Remote Transmission Request / Must be recessive) 
-  //4. IDE (Must be recessive for Extended Format)
   uint8_t REMOTE_FRAME = 0;        //If = 1 the frame should be a remote frame. If = 0 the frame will be either remote or data frame
   uint8_t EXTID = 1;               //If = 0 the frame should be a frame with standard ID. If = 1 the frame should be a frame with extended ID
   uint32_t Input_ID = 0x700;
