@@ -196,6 +196,13 @@ int main(void)
   uint16_t timerPeriod = 65535;
   uint16_t channelPulse = 0;
 
+  setChannelPulse(&htim1,1,0);
+  setChannelPulse(&htim1,2,0);
+  setChannelPulse(&htim1,3,0);
+  setChannelPulse(&htim3,1,0);
+  setChannelPulse(&htim3,2,0);
+  setChannelPulse(&htim3,3,0);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
