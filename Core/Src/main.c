@@ -50,6 +50,7 @@ CAN_HandleTypeDef hcan;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim16;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -85,6 +86,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USB_PCD_Init(void);
+static void MX_TIM16_Init(void);
 /* USER CODE BEGIN PFP */
 GPIO_TypeDef* getGPIOPort(uint8_t CAN_pin);
 uint16_t getGPIOPin(uint8_t CAN_pin);
@@ -137,6 +139,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USB_PCD_Init();
+  MX_TIM16_Init();
   /* USER CODE BEGIN 2 */
 
   //CAN Filter
@@ -196,6 +199,8 @@ int main(void)
   uint16_t timerPeriod = 65535;
   uint16_t channelPulse = 0;
 
+  HAL_TIM_Base_Start(&htim16);
+
   setChannelPulse(&htim1,1,0);
   setChannelPulse(&htim1,2,0);
   setChannelPulse(&htim1,3,0);
@@ -209,6 +214,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    if (output_sensor !=NULL) {
+      sendCANResponse(&hcan, 0xF0, output_sensor, 1, Response_ID);
+      output_sensor = NULL;
+      }
+
     if (!HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RxFifo)) //Checks if there are any messages being or about to be sent
       continue;
     HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData); //Retrieving message
@@ -604,6 +614,38 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief TIM16 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM16_Init(void)
+{
+
+  /* USER CODE BEGIN TIM16_Init 0 */
+
+  /* USER CODE END TIM16_Init 0 */
+
+  /* USER CODE BEGIN TIM16_Init 1 */
+
+  /* USER CODE END TIM16_Init 1 */
+  htim16.Instance = TIM16;
+  htim16.Init.Prescaler = 480-1;
+  htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim16.Init.Period = 65535;
+  htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim16.Init.RepetitionCounter = 0;
+  htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim16) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM16_Init 2 */
+
+  /* USER CODE END TIM16_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -753,13 +795,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : GPI_Sensor_3_Pin */
   GPIO_InitStruct.Pin = GPI_Sensor_3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPI_Sensor_3_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPI_Sensor_2_Pin GPI_Sensor_1_Pin */
-  GPIO_InitStruct.Pin = GPI_Sensor_2_Pin|GPI_Sensor_1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pins : GPI_Sensor_2_Pin GPI_Sensor_s1_Pin */
+  GPIO_InitStruct.Pin = GPI_Sensor_2_Pin|GPI_Sensor_s1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -777,11 +819,34 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SM_GPIO26_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  uint8_t * output_sensor = GPIO_Pin;
+  // switch(GPIO_Pin){
+  //   case GPI_Sensor_3_Pin:
+  //     output_sensor = GPI_Sensor_3_Pin;
+  //     break;
+  //   case GPI_Sensor_2_Pin:
+  //     output_sensor = GPI_Sensor_2_Pin;
+  //     break;
+  //   case GPI_Sensor_15_Pin:
+  //     output_sensor = SM_GPIO26_Pin;
+  //     break;
+  // }
+}
+
 GPIO_TypeDef* getGPIOPort(uint8_t CAN_pin) {
   if ((CAN_pin >> 4) == 0x0A)       //This gets shifted so the second HEX is ignored
     return GPIOA;
