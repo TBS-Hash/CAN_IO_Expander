@@ -70,8 +70,6 @@ uint8_t CAN_RxData[8];            //Stores the data which is going to be receive
 uint32_t CAN_RxFifo;              
 uint8_t UART1_RxData[200];
 uint8_t UART2_RxData[200];
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,9 +95,7 @@ void setPinAlternateMode(uint16_t input_pin, uint16_t pin_function);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 uint8_t EXTI_sensor_name = 0;
-uint8_t EXTI_last_cycle = 0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   if (GPIO_Pin == GPIO_PIN_1){ 
@@ -107,13 +103,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
   }
 
   else if (GPIO_Pin == GPIO_PIN_0){
-    EXTI_sensor_name = 0xB2;
+    EXTI_sensor_name = 0xB3;
   }
     
   else if (GPIO_Pin == GPIO_PIN_15){
-    EXTI_sensor_name = 0xB3;
+    EXTI_sensor_name = 0xB2;
   }
 }
+
 
 /* USER CODE END 0 */
 
@@ -125,6 +122,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+uint8_t EXTI_last_cycle = 0;
 
   /* USER CODE END 1 */
 
@@ -226,14 +224,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  
+
+    if (EXTI_last_cycle != EXTI_sensor_name){
+      CAN_TxData[0] = EXTI_sensor_name;
+      CAN_TxData[1] = 0x6B;
+      CAN_TxHeader.DLC = 0x2;
+      HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+      EXTI_last_cycle = EXTI_sensor_name;
+    }
+
     // if (EXTI_last_cycle != EXTI_sensor_name){
     //   uint8_t * EXTI_response_ptr = &EXTI_sensor_name;
     //   sendCANResponse(&hcan, 0xF0, EXTI_response_ptr, 1, Response_ID);
     //   EXTI_last_cycle = EXTI_sensor_name;
     //   EXTI_response_ptr = NULL;
     // }
-      
+       
     // uint8_t * EXTI_response_ptr = &EXTI_sensor_name;
     // uint8_t * EXTI_last_ptr = &EXTI_last_cycle;
 
