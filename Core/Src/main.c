@@ -209,17 +209,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-    uint8_t sensor_array
-    uint8_t read_sensor_input = HAL_GPIO_ReadPin();
-    uint8_t read_sensor_dut = HAL_GPIO_ReadPin();
-    uint8_t read_sensor_output = HAL_GPIO_ReadPin();
-
-    if (read_sensor_input || read_sensor_dut || read_sensor_output){
-      CAN_response_length = 1
-      CAN_response_data = 
-    }
-
+    
     if (!HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RxFifo)) //Checks if there are any messages being or about to be sent
       continue;
     HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData); //Retrieving message
