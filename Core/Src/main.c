@@ -97,7 +97,8 @@ void setPinAlternateMode(uint16_t input_pin, uint16_t pin_function);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t sensor_stage[] = {0,0,0}; 
+// uint8_t read_sensor_array[] = {0,0,0};
 /* USER CODE END 0 */
 
 /**
@@ -209,6 +210,55 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    uint8_t read_sensor_array[] = {
+      HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1),
+      HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0),
+      HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15)
+    };
+
+    for (uint8_t i = 0; i < 3; i++){
+      if (read_sensor_array[i] && (sensor_stage[i] == 0)){
+        uint8_t sensor_short = 0xB << 4 | i;
+        uint8_t * sensor_ptr = &sensor_short;
+        sensor_stage[i] = 1;
+
+        sendCANResponse(&hcan, 0xF0, sensor_ptr, 1, Response_ID);
+        *sensor_ptr = NULL;
+      }
+
+      else if (read_sensor_array[i] == 0){
+        sensor_stage[i] = 0;
+      }
+    }
+
+    // uint8_t * sensor_ptr = NULL;
+    // uint8_t sensor_short = 0xB << 4 | i;
+    // uint8_t * sensor_ptr = &sensor_short;
+
+    // if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1) && !sensor_stage[0]) {
+    //   sensor_stage[0] = 1;
+    //   *sensor_ptr = 0xB1;
+    //   sendCANResponse(&hcan, 0xF0, sensor_ptr, 1, Response_ID);
+    // };
+    // else{
+
+    // };
+
+    // if (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) && !sensor_stage[1]) {
+    //   sensor_stage[1] = 1;
+    //   sensor_stage[0] = 0;
+    //   *sensor_ptr = 0xB2;
+    //   sendCANResponse(&hcan, 0xF0, sensor_ptr, 1, Response_ID);
+    // };
+
+    // if (!HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_15) && !sensor_stage[2]) {
+    //   sensor_stage[2] = 1;
+    //   sensor_stage[1] = 0;
+    //   *sensor_ptr = 0xB3;
+    //   sendCANResponse(&hcan, 0xF0, sensor_ptr, 1, Response_ID);
+    // };  
+    // *sensor_ptr = NULL; 
+
     
     if (!HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RxFifo)) //Checks if there are any messages being or about to be sent
       continue;
