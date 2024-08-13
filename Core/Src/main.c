@@ -98,6 +98,28 @@ void setPinAlternateMode(uint16_t input_pin, uint16_t pin_function);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  uint8_t sensor_name = 0;
+  uint8_t * sensor_ptr = NULL;
+
+  if (GPIO_Pin == GPIO_PIN_1){ 
+    sensor_name = 0xB1;
+  }
+
+  else if (GPIO_Pin == GPIO_PIN_0){
+    sensor_name = 0xB2;
+  }
+    
+  else if (GPIO_Pin == GPIO_PIN_15){
+    sensor_name = 0xB3;
+  }
+
+  sendCANResponse(&hcan, 0xF0, sensor_ptr, 2, 0x700);  
+  *sensor_ptr = NULL;
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -841,26 +863,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  uint8_t * sensor_ptr = NULL;
-
-  if (GPIO_Pin == GPIO_PIN_1){ 
-    *sensor_ptr = 0xB1;
-    }
-
-  else if (GPIO_Pin == GPIO_PIN_0){
-    *sensor_ptr = 0xB2;
-    }
-    
-  else if (GPIO_Pin == GPIO_PIN_15){
-    *sensor_ptr = 0xB3;
-    }
-
-  sendCANResponse(&hcan, 0xF0, sensor_ptr, 2, 0x700);  
-  *sensor_ptr = NULL;
-}
-
 GPIO_TypeDef* getGPIOPort(uint8_t CAN_pin) {
   if ((CAN_pin >> 4) == 0x0A)       //This gets shifted so the second HEX is ignored
     return GPIOA;
