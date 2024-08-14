@@ -70,6 +70,14 @@ uint8_t CAN_RxData[8];            //Stores the data which is going to be receive
 uint32_t CAN_RxFifo;              
 uint8_t UART1_RxData[200];
 uint8_t UART2_RxData[200];
+
+TIM_HandleTypeDef* activeTimer;
+uint16_t timerChannel = 0;
+uint16_t timerPrescaler = 0;
+uint16_t timerFreq = 10000;
+uint16_t timerPeriod = 65535;
+uint16_t channelPulse = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,24 +99,85 @@ TIM_HandleTypeDef* getTimer(uint8_t timer);
 void sendCANResponse(CAN_HandleTypeDef* hcan, uint8_t command, uint8_t* CAN_response, int16_t CAN_response_length, uint32_t Response_ID);
 void setChannelPulse(TIM_HandleTypeDef* timer, uint8_t channel, uint16_t pulse);
 void setPinAlternateMode(uint16_t input_pin, uint16_t pin_function);
+void SetFrequencyPWM(uint8_t timer, uint16_t frequency);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t EXTI_sensor_name = 0;
+uint16_t EXTI_last_cycle = 0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-  if (GPIO_Pin == GPIO_PIN_1){ 
-    EXTI_sensor_name = 0xB1;
+
+  CAN_TxData[1] = 0x6B;
+  CAN_TxHeader.DLC = 0x2;
+
+  if (EXTI_last_cycle != GPIO_Pin){
+
+    switch (GPIO_Pin)
+    {
+    case GPIO_PIN_1:
+      SetFrequencyPWM(1, timerFreq);
+      setChannelPulse(&htim1, 1, timerPeriod);
+      EXTI_last_cycle = GPIO_Pin;
+      break;
+
+    case GPIO_PIN_15:
+
+      setChannelPulse(&htim1,1,0);
+      EXTI_last_cycle = GPIO_Pin;
+
+      while(1){
+        HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData);
+
+        if(CAN_RxData[0] == 0xF2){
+          SetFrequencyPWM(1, timerFreq);
+          setChannelPulse(&htim1, 1, timerPeriod);
+          CAN_TxData[0] = 0xF2;
+          break;
+        }
+      }
+      HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+      break;
+
+    case GPIO_PIN_0:
+
+      EXTI_last_cycle = GPIO_Pin;
+      while(1){
+        HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData);
+
+        if(CAN_RxData[0] == 0xF3){
+          setChannelPulse(&htim1, 1, 0);
+          CAN_TxData[0] = 0xF3;
+          break;
+        }
+      }
+      HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+      break;
+    }
   }
 
-  else if (GPIO_Pin == GPIO_PIN_0){
-    EXTI_sensor_name = 0xB3;
-  }
+
+  // if (GPIO_Pin == GPIO_PIN_1){ 
+  //   EXTI_sensor_name = 0xB1;
+  // }
+
+  // else if (GPIO_Pin == GPIO_PIN_0){
+  //   EXTI_sensor_name = 0xB3;
+  // }
     
-  else if (GPIO_Pin == GPIO_PIN_15){
-    EXTI_sensor_name = 0xB2;
-  }
+  // else if (GPIO_Pin == GPIO_PIN_15){
+  //   EXTI_sensor_name = 0xB2;
+  // }
+
+
+  // if (EXTI_last_cycle != EXTI_sensor_name){
+  //   CAN_TxData[0] = 0xF0;
+  //   CAN_TxData[1] = EXTI_sensor_name;
+  //   CAN_TxData[2] = 0x6B;
+  //   CAN_TxHeader.DLC = 0x3;
+  //   EXTI_last_cycle = EXTI_sensor_name;
+  //   HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+  // }
 }
 
 
@@ -204,13 +273,6 @@ uint8_t EXTI_last_cycle = 0;
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 
-  TIM_HandleTypeDef* activeTimer;
-  uint16_t timerChannel = 0;
-  uint16_t timerPrescaler = 0;
-  uint16_t timerFreq = 1000;
-  uint16_t timerPeriod = 65535;
-  uint16_t channelPulse = 0;
-
   setChannelPulse(&htim1,1,0);
   setChannelPulse(&htim1,2,0);
   setChannelPulse(&htim1,3,0);
@@ -224,33 +286,6 @@ uint8_t EXTI_last_cycle = 0;
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-    if (EXTI_last_cycle != EXTI_sensor_name){
-      CAN_TxData[0] = EXTI_sensor_name;
-      CAN_TxData[1] = 0x6B;
-      CAN_TxHeader.DLC = 0x2;
-      HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
-      EXTI_last_cycle = EXTI_sensor_name;
-    }
-
-    // if (EXTI_last_cycle != EXTI_sensor_name){
-    //   uint8_t * EXTI_response_ptr = &EXTI_sensor_name;
-    //   sendCANResponse(&hcan, 0xF0, EXTI_response_ptr, 1, Response_ID);
-    //   EXTI_last_cycle = EXTI_sensor_name;
-    //   EXTI_response_ptr = NULL;
-    // }
-       
-    // uint8_t * EXTI_response_ptr = &EXTI_sensor_name;
-    // uint8_t * EXTI_last_ptr = &EXTI_last_cycle;
-
-    // if (*EXTI_last_ptr != *EXTI_response_ptr){
-    //   sendCANResponse(&hcan, 0xF0, EXTI_response_ptr, 1, Response_ID);
-    //   memcpy(EXTI_last_ptr, EXTI_response_ptr, 1);
-    // }
-    
-    // EXTI_response_ptr = NULL;
-    // EXTI_last_ptr = NULL;
-
     if (!HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RxFifo)) //Checks if there are any messages being or about to be sent
       continue;
     HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData); //Retrieving message
@@ -958,6 +993,20 @@ void setChannelPulse(TIM_HandleTypeDef* timer, uint8_t channel, uint16_t pulse) 
     timer->Instance->CCR3 = pulse;
   else if (channel == 4)
     timer->Instance->CCR4 = pulse;
+}
+
+void SetFrequencyPWM(uint8_t timer, uint16_t frequency){
+  activeTimer = getTimer(timer);  
+  if (frequency > 10000)
+    timerPrescaler = 0;
+  else if (frequency > 1000)
+    timerPrescaler = 10;
+  else 
+    timerPrescaler = 100;
+  // timerPrescaler = (int)(SYS_FREQ / frequency / 1000) - 1;
+  timerPeriod = (int)(SYS_FREQ / frequency / (timerPrescaler + 1)) - 1;
+  activeTimer->Instance->ARR = timerPeriod;
+  activeTimer->Instance->PSC = timerPrescaler;
 }
 
 /* USER CODE END 4 */
