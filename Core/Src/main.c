@@ -385,23 +385,35 @@ int main(void)
         break;
 
       case 0xFB: // EXTI_Channel
-        EXTI_timer = CAN_RxData[1];
+        EXTI_channel = CAN_RxData[1];
         break;
       
       case 0xFC: // EXTI_duty_cycle
         EXTI_duty_cycle = CAN_RxData[1];
         break;
 
-      case 0xFD: // EXTI_Pins
+      case 0xFD: // EXTI_sensor_function
+        EXTI_sensor_function[0] = CAN_RxData[1];
+        EXTI_sensor_function[1] = CAN_RxData[2];
+        EXTI_sensor_function[2] = CAN_RxData[3];
+        break;
+
+      case 0xFE: // EXTI_Pins
         EXTI_Pins[0] = CAN_RxData[1] << 8 | CAN_RxData[2];
         EXTI_Pins[1] = CAN_RxData[3] << 8 | CAN_RxData[4];
         EXTI_Pins[2] = CAN_RxData[5] << 8 | CAN_RxData[6];
         break;
 
-      case 0xFE: // EXTI_sensor_function
-        EXTI_sensor_function[0] = CAN_RxData[1];
-        EXTI_sensor_function[1] = CAN_RxData[2];
-        EXTI_sensor_function[2] = CAN_RxData[3];
+      case 0xFF:
+        EXTI_timer = CAN_RxData[1];
+        EXTI_channel = CAN_RxData[2];
+        EXTI_duty_cycle = CAN_RxData[3];
+        EXTI_sensor_function[0] = (CAN_RxData[4] & 0xF0);
+        EXTI_sensor_function[1] = (CAN_RxData[4] << 4);
+        EXTI_sensor_function[2] = (CAN_RxData[5] & 0xF0);
+        EXTI_Pins[0] = (1 << (CAN_RxData[5] & 0x0F));
+        EXTI_Pins[1] = (1 << (CAN_RxData[6] & 0xF0));
+        EXTI_Pins[2] = (1 << (CAN_RxData[6] & 0x0F));
         break;
 
     }
