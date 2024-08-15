@@ -27,16 +27,16 @@ Project File Date:  08/14/2024
 <h2>Output:</h2>
 *** Using Compiler 'V6.22', folder: 'C:\Users\User\AppData\Local\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'CAN_IO_Expander'
-../Core/Src/main.c(344): warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
-  344 |         uint8_t uart_num = CAN_RxData[1];
+../Core/Src/main.c(347): warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
+  347 |         uint8_t uart_num = CAN_RxData[1];
       |         ^
-../Core/Src/main.c(363): warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
-  363 |         uint32_t Changed_ID = ((CAN_RxData[1] << 24) | (CAN_RxData[2] << 16) | (CAN_RxData[3] << 8) | CAN_RxData[4]); //The ID is contained in the Data Arrays from 1 to 4 
+../Core/Src/main.c(366): warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
+  366 |         uint32_t Changed_ID = ((CAN_RxData[1] << 24) | (CAN_RxData[2] << 16) | (CAN_RxData[3] << 8) | CAN_RxData[4]); //The ID is contained in the Data Arrays from 1 to 4 
       |         ^
 2 warnings generated.
 compiling main.c...
 linking...
-Program Size: Code=17462 RO-data=430 RW-data=16 ZI-data=3776  
+Program Size: Code=17066 RO-data=430 RW-data=16 ZI-data=3776  
 FromELF: creating hex file...
 "CAN_IO_Expander\CAN_IO_Expander.axf" - 0 Error(s), 2 Warning(s).
 
@@ -62,7 +62,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE@6.1.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Build Time Elapsed:  00:00:00
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>
