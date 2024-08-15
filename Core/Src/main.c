@@ -128,6 +128,7 @@ int main(void)
   uint8_t EXTI_duty_cycle = 100; //C
   uint16_t EXTI_Pins[] = {GPIO_PIN_1, GPIO_PIN_15, GPIO_PIN_0}; //D
   uint8_t EXTI_sensor_function[] = {1,2,3};  //E
+  uint8_t EXTI_enable_disable = 1; // F0
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -222,10 +223,12 @@ int main(void)
   while (1)
   {
 ////////////////// EXTI CODE ///////////////////////////////
+  if (EXTI_enable_disable == 1){
+
   uint8_t EXTI_channel_pulse = (EXTI_duty_cycle * timerPeriod)/100;
-  activeTimer = getTimer(CAN_RxData[1]);  
-    CAN_TxData[1] = 0x6B;
-    CAN_TxHeader.DLC = 0x2;
+  activeTimer = getTimer(EXTI_timer);  
+  CAN_TxData[1] = 0x6B;
+  CAN_TxHeader.DLC = 0x2;
 
     for (uint8_t i = 0; i < 3; i++)
     {
@@ -271,7 +274,7 @@ int main(void)
         }
       }
     }
-
+  }
 ////////////////////////////////////////////////////////////////////////////////////
 
     if (!HAL_CAN_GetRxFifoFillLevel(&hcan, CAN_RxFifo)) //Checks if there are any messages being or about to be sent
@@ -379,6 +382,10 @@ int main(void)
         MX_USB_PCD_Init();
         CAN_response_length = 0;
       break;
+
+      case 0xF0: // EXTI_enable_disable
+        EXTI_enable_disable = CAN_RxData[1];
+        break;
 
       case 0xFA: // EXTI_timer
         EXTI_timer = CAN_RxData[1];
