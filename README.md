@@ -14,7 +14,7 @@ To upload and debug the program use [Ozone](https://www.segger.com/products/deve
 - GND - Cable Pin 3
 - SWCLK - Cable Pin 5
 - SWDIO - Cable Pin 4  
-<img src="image.png" alt="drawing" width="200"/>
+<img src="JTAG.png" alt="drawing" width="200"/>
 <img src="image-2.png" alt="drawing" width="200"/>
 
 ### Flash
