@@ -122,6 +122,8 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+
+  
   uint16_t EXTI_last_cycle = 0;
   uint8_t EXTI_timer = 1; //A
   uint8_t EXTI_channel = 1; //B
@@ -129,6 +131,8 @@ int main(void)
   uint16_t EXTI_Pins[] = {GPIO_PIN_1, GPIO_PIN_15, GPIO_PIN_0}; //D
   uint8_t EXTI_sensor_function[] = {1,2,3};  //E
   uint8_t EXTI_enable_disable = 1; // F0
+
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -223,53 +227,53 @@ int main(void)
   while (1)
   {
 ////////////////// EXTI CODE ///////////////////////////////
-  if (EXTI_enable_disable == 1){
+  if (EXTI_enable_disable == 1){ //Check if the EXTI system is enabled
 
-  uint8_t EXTI_channel_pulse = (EXTI_duty_cycle * timerPeriod)/100;
-  activeTimer = getTimer(EXTI_timer);  
-  CAN_TxData[1] = 0x6B;
-  CAN_TxHeader.DLC = 0x2;
+  uint8_t EXTI_channel_pulse = (EXTI_duty_cycle * timerPeriod)/100; // Calculate the duty cycle
+  activeTimer = getTimer(EXTI_timer);  // Get the correct timer
+  CAN_TxData[1] = 0x6B;     // Set the response verification
+  CAN_TxHeader.DLC = 0x2;   // Set the Data field length to 2 bytes
 
-    for (uint8_t i = 0; i < 3; i++)
+    for (uint8_t i = 0; i < 3; i++) // Loop through the EXTI_Pins
     {
-      if((EXTI_Pins[i] == EXTI_callback_pin) && (EXTI_callback_pin != EXTI_last_cycle))
+      if((EXTI_Pins[i] == EXTI_callback_pin) && (EXTI_callback_pin != EXTI_last_cycle)) // If the pin from last cycle is not the pin and the set pin
       {
-        SetFrequencyPWM(EXTI_timer, timerFreq);
+        SetFrequencyPWM(EXTI_timer, timerFreq); // Set frequency to standard 10 kHz
         EXTI_last_cycle = EXTI_callback_pin;
 
         switch (EXTI_sensor_function[i])
         {
-        case 1:
-          setChannelPulse(activeTimer, EXTI_channel, EXTI_channel_pulse);
+        case 1: // the input sensor
+          setChannelPulse(activeTimer, EXTI_channel, EXTI_channel_pulse); // set to specified duty cycle
           break;
 
-        case 2:
-          setChannelPulse(activeTimer, EXTI_channel, 0);
+        case 2: // the middle sensor
+          setChannelPulse(activeTimer, EXTI_channel, 0); // pause the belt
 
-          while(1){
+          while(1){ // wait for message back
             HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData);
 
             if(CAN_RxData[0] == 0xF2){
               SetFrequencyPWM(EXTI_timer, timerFreq);
-              setChannelPulse(activeTimer, EXTI_channel, EXTI_channel_pulse);
+              setChannelPulse(activeTimer, EXTI_channel, EXTI_channel_pulse); // turn on belt motors 
               CAN_TxData[0] = 0xF2;
               break;
             }
           }
-          HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+          HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox); // Return for acknowledgment
           break;
 
-        case 3:
-          while(1){
+        case 3: // the output sensor
+          while(1){ // wait for message
             HAL_CAN_GetRxMessage(&hcan, CAN_RxFifo, &CAN_RxHeader, CAN_RxData);
 
             if(CAN_RxData[0] == 0xF3){
-              setChannelPulse(activeTimer, EXTI_channel , 0);
+              setChannelPulse(activeTimer, EXTI_channel , 0); // turn the belt motors of
               CAN_TxData[0] = 0xF3;
               break;
             }
           }
-          HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox);
+          HAL_CAN_AddTxMessage(&hcan, &CAN_TxHeader, CAN_TxData, &CAN_TxMailbox); // Return for acknowledgment
           break;
         }
       }
